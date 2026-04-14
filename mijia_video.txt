@@ -1,0 +1,26 @@
+write a shell script with ffmpeg, mijia_video.sh $videoFolder
+- for each date like 20260321, 20260322, ....
+- delete all pictures in subfolders
+- create a date folder 20260321
+- move all videos from hour folder 2026032112-2026032211 to datefolder 20260321
+- delete all empty folders
+- merge all videos in date folder to $date.mp4, e.g. 20260321 to 20260321.mp4 
+- there should be 20260321.mp4, 20260322.mp4, ..., 20260329.mp4
+
+===
+
+- write mijia_hour2date.sh $folder
+- show processing detail for each file 
+- delete all pictures in subfolders
+- rename all video files, add date before video files
+- e.g. change 2026032118/47M31S_1774144051.mp4 to 2026032118/2026032118_47M31S_1774144051.mp4
+- for each date like 20260321, 20260322, ....
+	- create a date folder $dateFolder like 20260321, 20260322, ...
+	- move all videos from hour folders 2026032112,...,2026032211 to $datefolder 20260321
+	- delete all empty folders
+
+- write mijia_date_video.sh $folder
+- show processing detail for each file 
+	- list all datefolders, e.g. 20260321, 20260322, ...
+	- combine all videos in each $dateFolder to $date.mp4
+	- skip invalid videos
