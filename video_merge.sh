@@ -47,12 +47,29 @@ done
 
 echo "Merging ${#files[@]} files into $out_file"
 
+# Phone videos can contain extra data/metadata tracks (for example Pixel's
+# "mett" track) that MP4 concatenation cannot copy. Select only the primary
+# video/audio tracks; the audio map is optional so silent videos still work.
+stream_maps=(-map 0:v:0 -map '0:a:0?')
+
 # Fast path: stream copy if codecs are compatible.
-if ffmpeg -y -f concat -safe 0 -i "$list_file" -c copy "$out_file"; then
+if ffmpeg -y -f concat -safe 0 -i "$list_file" \
+  "${stream_maps[@]}" -dn -map_metadata -1 -map_chapters -1 \
+  -c:v copy -c:a copy -movflags +faststart "$out_file"; then
   echo "Done: $out_file"
   exit 0
 fi
 
 echo "Copy concat failed; retrying with re-encode for compatibility..."
-ffmpeg -y -f concat -safe 0 -i "$list_file" -c:v libx264 -preset medium -crf 18 -c:a aac -b:a 192k "$out_file"
+video_encoder=(libx264 -preset medium -crf 18)
+if [[ "$(uname -s)" == "Darwin" ]] && \
+   ffmpeg -hide_banner -encoders 2>/dev/null | grep 'h264_videotoolbox' >/dev/null; then
+  # Hardware fallback is much faster than libx264 for 4K phone footage.
+  video_encoder=(h264_videotoolbox -b:v 35M)
+fi
+
+ffmpeg -y -f concat -safe 0 -i "$list_file" \
+  "${stream_maps[@]}" -dn -map_metadata -1 -map_chapters -1 \
+  -c:v "${video_encoder[@]}" -c:a aac -b:a 192k \
+  -movflags +faststart "$out_file"
 echo "Done: $out_file"
